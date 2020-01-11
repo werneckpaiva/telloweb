@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.slim.js" type="text/javascript"></script>
+
+    <title>Tello</title>
+
+    <style>
+      html,body{
+        height:100%;
+        padding:0;
+        margin:0;
+        font-family: Arial;
+      }
+      #content{
+          width:100%;
+          height:100%;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+      }
+
+      #status {
+          width: 90%;
+          display: flex;
+          flex-direction: column;
+          justify-content:center;
+          align-items:center;
+      }
+
+      #battery{
+        width:100%;
+        padding:10px;
+        height: 50px;
+        border: 2px solid black;
+      }
+
+      #battery-value{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        width: 100%;
+        height: 100%;
+      }
+
+      .battery-good{
+        background-color: #8bc34a;
+        color: #000;
+      }
+
+      .battery-medium{
+        background-color: #f99f30;
+        color: #fff;
+      }
+
+      .battery-critical{
+        background-color: #ef4342;
+        color: #fff;
+      }
+
+    </style>
+    <script type="text/javascript">
+
+        /*
+        {'pitch': '0',
+        'roll': '0',
+        'yaw': '128',
+        'vgx': '0',
+        'vgy': '0',
+        'vgz': '0',
+        'templ': '68',
+        'temph': '70',
+        'tof': '10',
+        'h': '0',
+        'bat': '17',
+        'baro': '-112.94',
+        'time': '0',
+        'agx': '1.00',
+         'agy':
+         '-4.00',
+         'agz':
+         '-1000.00'}
+        */
+
+        $(function(){
+          socket = io.connect(document.domain + ':' + location.port);
+
+          socket.on('connect', function(){
+            console.log("connected");
+          });
+
+          socket.on('tello_status', function(telloStatus) {
+            if ("bat" in telloStatus){
+                var batteryValue = parseInt(telloStatus["bat"]);
+                var batteryPerc = telloStatus["bat"] + "%";
+                var batteryStyle = "";
+                if (batteryValue <= 10){
+                    batteryStyle = "battery-critical";
+                } else if (batteryValue <= 30){
+                    batteryStyle = "battery-medium";
+                } else {
+                    batteryStyle = "battery-good";
+                }
+                $("#battery-value")
+                    .width(batteryPerc)
+                    .html(batteryPerc)
+                    .attr("class", batteryStyle);
+            }
+            if ("time" in telloStatus){
+                $("#status-time").html(telloStatus["time"]);
+            }
+            if ("h" in telloStatus){
+                $("#status-alt").html(telloStatus["h"]);
+            }
+            console.log(telloStatus);
+          });
+        });
+
+    </script>
+
+  </head>
+  <body>
+    <div id="content">
+        <div id="status">
+            <div id="battery">
+                <div id="battery-value">100%</div>
+            </div>
+            <div>Time: <span id="status-time"></span></div>
+            <div>Altitude: <span id="status-alt"></span></div>
+        </div>
+    </div>
+</body>
+</html>
